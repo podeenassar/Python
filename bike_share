@@ -1,0 +1,213 @@
+import time
+import pandas as pd
+import numpy as np
+import calendar
+import datetime
+from PIL import Image
+from pynput import keyboard
+
+city_data = { 'chicago': 'chicago.csv','new york city': 'new_york_city.csv',
+              'washington': 'washington.csv' }
+
+city_name = ['chicago', 'new york city', 'washington']
+month_name = ['all', 'january', 'february', 'march', 'april', 'may', 'june']
+days_name = ['all', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+
+def get_filters(): # USER INPUT AND VALIDATION
+
+    myImage = Image.open("bikeshare.png");
+    display(myImage)
+    print(' '*16+'Wlecome To BIKE SHARE' )
+    print(' '*10+'Please choose City, Month and Day' )
+    while True: # CITY NAME INPUT AND VALIDATION
+          city = input('\nEnter name of the city {} :\n'.format(city_name)).lower() # CITY NAME INPUT
+          if city in city_name: # CHECK IF THE CITY NAME IN THE LIST
+            break
+
+    while True:  # MONTH NAME INPUT AND VALIDATION
+          month = input('\nEnter name of the month: \n{}\n'.format(month_name)).lower()#ASK USER TO ENTER THE MONTH NAME
+          if month in month_name: # CHECK THE MONTH CITY IN MONTH LIST
+                break
+
+    while True:# DAY NAME INPUT AND VALIDATION
+          day = input('\nEnter name of the day of week:{}\n'.format(days_name)).lower() # DAY NAME INPUT
+          if day  in days_name:   # CHECK THE DAY IN DAYS_NAME LIST
+                print('\nHello! Let\'s explore some US bikeshare data!')
+                break
+
+    print('-'*40) 
+    return city, month, day #PASS VARIABLES VALUES
+
+
+
+def show_raw_data(city): # PROMOT USER TO SEE RAW DATA
+    
+    while True: # VALID USER INPUT (YES or NO ONLY)
+        show_raw = input('\nWould you like to show 5 rows of data? Enter yes or no.\n').lower()
+        if show_raw  in ('no','yes'): 
+         break
+        print('Please Enter YES or NO only!')
+    
+    while show_raw == 'yes': # VALID (YES) CHOICE
+     try:
+        for chunk in pd.read_csv(city_data[city], chunksize=5):  # EXTRACT FIRST 5 ROWS
+            print(chunk)#SHOW FIRST 5 ROWS
+
+            while True: #ASK USER FOR SHOWING MORE RAW DATA ROWS 
+                show_raw = input('\nWould you like to show more 5 rows of data? Enter YES or NO only.\n').lower()
+                if show_raw  in ('no','yes'):
+                    break #CLOSE THE LOOP
+                 
+            if show_raw == 'no' : #VALID (NO) CHOICE
+                print('Thank you!')
+                break # CLOSE THE LOOP
+   
+        break  #CLOSE WHILE LOOP 
+        
+     except KeyboardInterrupt:
+            print ('Thank you')
+
+
+def load_data(city, month, day): # LOAD AND EXTRACT DATA SET
+
+    df = pd.read_csv(city_data[city]) # CREAT DATA FRAMSS FROM CITY DATA SET
+    
+    df['Start Time'] = pd.to_datetime(df['Start Time']) # EXTRACT TIME DATA
+    df['month'] = df['Start Time'].dt.month  # EXTRACT MONTHS DATA
+    df['day_of_week'] = df['Start Time'].dt.day_name() # EXTRACT DAYS DATA
+    df['hour'] = df['Start Time'].dt.hour # EXTRACT HOURS DATA
+
+    if month != 'all': # INCLUDE CHOISE 'ALL'
+        months = month_name[1:]
+        month = months.index(month) + 1
+        df = df[df['month'] == month]
+
+    if day != 'all': # INCLUDE CHOISE 'ALL'
+        df = df[df['day_of_week'] == day.title()]
+    return df
+
+
+def time_stats(df): # SOME TIME STATICS 
+    
+    print('\nCalculating The Most Frequent Times of Travel...\n')
+    start_time = time.time()
+
+    popular_months = df['month'].mode()[0] # MOST COMMON MONTH
+    popular_month= calendar.month_name[popular_months] # RETURN BACK MONTH IN NAME 
+    popular_day = df['day_of_week'].mode()[0] # MOST COMMON DAY
+    popular_hour = df['hour'].mode()[0] # MOST COOMON HOUR
+    
+    # GET COMMON PART OF THE DAY
+    
+    if 5 <= popular_hour <= 11:
+        popular_day_time = "Morning"
+    elif 12 <= popular_hour <= 17:
+         popular_day_time = "Afternoon"
+    elif 18 <= popular_hour <= 22:
+         popular_day_time = "Evening"
+    else:
+         popular_day_time = "Night"
+         
+    print('\nPopular Month: {}\nPopular Day: {}\nPopluar Hour: {}:00\nPopular Day Part: {}\n'.format(popular_month, popular_day, popular_hour, popular_day_time )) # PRINT STATS DATA
+    print("\nThis took %s seconds." % (time.time() - start_time)) 
+    print('-'*40)
+
+
+def station_stats(df): # STATIONS STATISTICS 
+    
+    print('\nCalculating The Most Popular Stations and Trip...\n')
+    start_time = time.time()
+
+    popular_start_station = df['Start Station'].mode()[0] # COMMON START STATION
+    popular_end_station = df['End Station'].mode()[0] # COMMON END STATION
+    popular_start_end_station =  (df['Start Station'] +  df['End Station']).mode()[0] # COMMON START AND END STATION
+    
+    least_start_station_count = df['Start Station'].value_counts().to_dict() # LEAST COMMON START STATION
+    least_start_station = min(least_start_station_count, key=least_start_station_count.get)
+
+    least_end_station_count = df['End Station'].value_counts().to_dict() # LEAST COMMON END STATION
+    least_end_station = min(least_end_station_count, key=least_end_station_count.get)
+
+
+    print('\n- MOST COMMON STATIONS:\n\nStart Station: {}\nEnd Station: {}\nStart and End Station: {}\n'.format(popular_start_station, popular_end_station, popular_start_end_station))
+    print('\n- LEAST COMMON STATIONS:\n\nStart Station: {}\nEnd Station: {}\n'.format(least_start_station,least_end_station ))
+    print("\nThis took %s seconds." % (time.time() - start_time))
+    print('-'*40)
+
+
+def trip_duration_stats(df): # TRIP DURATION STATSTICS
+
+    print('\nCalculating Trip Duration...\n')
+    start_time = time.time()
+
+    # TOTAL, AVERAGE, MAXMUM AND MINIMUM
+    total_trip_duration = df['Trip Duration'].sum()
+    mean_trip_duration = df['Trip Duration'].mean()
+    max_trip_duration = df['Trip Duration'].max()
+    min_trip_duration = df['Trip Duration'].min()
+
+    print('- TRIP DURATIONS STATISTICS:\n\nTotal: {}\nAverage: {}\nMax: {}\nMin: {}\n'.format(total_trip_duration,
+                                                                                            mean_trip_duration, max_trip_duration, min_trip_duration))
+    print("\nThis took %s seconds." % (time.time() - start_time))
+    print('-'*40)
+
+
+def user_stats(df): # USERS STATISCICS
+    
+
+    print('\nCalculating User Stats...\n')
+
+    start_time = time.time()
+    
+    user_types_count= df['User Type'].value_counts() # USERS TYPES COUNT 
+    try:
+        gender_types_count= df['Gender'].value_counts() # USERS GENDER COUNT
+        earliest_year = df['Birth Year'].max() # EARIST BIRTH YEAR
+        common_year = df['Birth Year'].mode()[0] # MOST COMMON BIRTHYEAR
+        youngest_age = datetime.datetime.now().year - df['Birth Year'].max() # YOUNGEST AGE
+        oldest_age = datetime.datetime.now().year - df['Birth Year'].min() # OLDEST AGE 
+        common_age = datetime.datetime.now().year - df['Birth Year'].mode()[0] # COMMON AGE
+ 
+        print('- Users Counts:\n\nTotalUsers number: {}\n\nGender: \n{}\n\nEarliest Birth Year:: {}\nMost Common Birth Year: {}\nYoungest Age: {} years\noldest Age: {} Years\nCommon Age: {} years\n'.format(user_types_count,
+                gender_types_count, int(earliest_year), int(common_year), int(youngest_age), int(oldest_age), int(common_age)))
+
+    except KeyError:
+        print('Sorry this data is not available!')
+
+    print("\nThis took %s seconds." % (time.time() - start_time))
+    print('-'*40)
+
+
+def main():
+
+    while True:
+        city, month, day = get_filters()
+        df = load_data(city, month, day)
+
+        show_raw_data(city)
+        time_stats(df)
+        station_stats(df)
+        trip_duration_stats(df)
+        user_stats(df)
+    
+        restart = input('\nWould you like to restart? Enter yes or no.\n').lower()
+        while restart not in ("yes","no"):  # WHILE LOOP TO VALID USER ENTER
+              restart = input('\nPlease Enter Either YES or NO.\n').lower()
+        if restart == "no":
+            print('Good Bye!')
+            break
+        print('\nWelcome Back!\n')
+              
+
+if __name__ == "__main__":
+	main()
+
+
+
+
+
+
+
+
+
+
