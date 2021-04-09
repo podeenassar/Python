@@ -1,0 +1,130 @@
+# %% [markdown]
+# # Plastic waste
+# 
+# - We are going to discover dataset  (plastic waste)
+# - Each dataset include values for each country over some years
+# - Since this dataset for countries so we gonna use geopandas to show data on map.
+# 
+# Questions: 
+# - Highest and lowest countries over datasets years
+# - changing in countries over dataset years 
+# - Investigat any upnormal data
+# - others
+# 
+# ## Lets Start
+# 
+
+# %% [code]
+# Import liberaries
+%matplotlib inline
+import pandas as pd
+import numpy as np 
+import matplotlib.pyplot as plt
+import seaborn as sns
+import geopandas as gpd
+import plotly.express as px
+
+
+
+# %% [markdown]
+# ## plastic waste
+# ### Load dataset 
+# 
+
+# %% [code]
+## Let's load and discover the dataset: (compt_plastic_wst.csv)
+compt_plastic_wst_import= pd.read_csv('../input/comptplasticwaste/compt_plastic_wst.csv')
+compt_plastic_wst = compt_plastic_wst_import.copy()
+
+# %% [code]
+compt_plastic_wst.info()
+
+# %% [code]
+#data cleaning 
+compt_plastic_wst.dropna(axis=1,how='all', inplace = True)
+compt_plastic_wst.fillna(0, inplace = True)
+compt_plastic_wst.head()
+
+# %% [code] {"scrolled":true}
+# get some statistics 
+compt_plastic_wst.describe()
+
+# %% [code]
+# plot mean
+compt_plastic_wst.describe().mean().plot(title = 'Plastic wastes')
+
+# %% [code]
+# plot max
+compt_plastic_wst.describe().max().plot()
+
+# %% [code]
+# plot min
+compt_plastic_wst.describe().min().plot()
+
+# %% [code]
+# highest in the year (2014), country 
+compt_plastic_wst.loc[compt_plastic_wst['2014'].idxmax(), 'country']
+
+# %% [code]
+# highest in the year (1993), country 
+compt_plastic_wst.loc[compt_plastic_wst['1993'].idxmax(), 'country']
+
+# %% [code]
+# minimum in the year (1995), country 
+compt_plastic_wst.loc[compt_plastic_wst['1995'].idxmin(), 'country']
+
+# %% [code]
+# highest in the year (2017), country 
+compt_plastic_wst.loc[compt_plastic_wst['2017'].idxmax(), 'country']
+
+# %% [markdown]
+# ### Geopandas for  plotting dateset on the world map
+
+# %% [code] {"scrolled":true}
+
+
+#insert world_data_map
+world_data = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
+
+#merg world_data with our dataframe
+compt_plastic_wst_geo=world_data.merge(compt_plastic_wst,left_on='name', right_on='country')
+compt_plastic_wst_geo.head()
+
+# Geoplot of Plastic waste in the year 1993 (First dataset's year)
+fig, ax = plt.subplots(1, 1)
+compt_plastic_wst_geo.plot(column='1993',ax=ax, legend=True ,  legend_kwds={'label': "compt plastic wst in 1993"})
+fig.set_size_inches(15,5)
+
+# Geoplot of Plastic waste in the year 2014 
+fig, ax = plt.subplots(1, 1)
+compt_plastic_wst_geo.plot(column='2014',ax=ax, legend=True ,  legend_kwds={'label': "compt plastic wst in 2014"})
+fig.set_size_inches(15,5)
+
+# Geoplot of Plastic waste in the year 2017 (last dataset's year)
+fig, ax = plt.subplots(1, 1)
+compt_plastic_wst_geo.plot(column='2017',ax=ax, legend=True ,  legend_kwds={'label': "compt plastic wst in 2017"})
+fig.set_size_inches(15,5)
+
+
+
+# %% [code]
+
+
+# %% [markdown]
+# # Conclusion
+# 
+
+# ### Plastic waste dataset:
+# this dataset had a lot of missing data.
+# 
+# Statistics and plots show:
+# - the means of plastic wastes increases along years till the year 2014 then start to go down which may back to increasing the awareness of the impact of the hazards of plastics. 
+# - the Geo plotting data shows changes in the number of plastic wastes over time
+# - Turkey had the highest amount of plastic wastes in 1993
+# - Nepal had the highest amount of plastic wastes in 2017
+# 
+
+# %% [code]
+
+
+# %% [code]
