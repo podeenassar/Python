@@ -1,0 +1,134 @@
+# %% [markdown]
+# # CO2 emissions
+# 
+# - We are going to discover datasets (CO2 emissions)
+# - dataset include values for each country over some years
+# - Since these datasets for countries so we gonna use geopandas to show data on map.
+# 
+# Questions: 
+# - Highest and lowest countries over datasets years
+# - changing in countries over dataset years 
+# - Investigat any upnormal data
+# - others
+# 
+# ## Lets Start
+# 
+
+# %% [code]
+# Import liberaries
+%matplotlib inline
+import pandas as pd
+import numpy as np 
+import matplotlib.pyplot as plt
+import seaborn as sns
+import geopandas as gpd
+import plotly.express as px
+
+
+
+# %% [markdown]
+# ### Load dataset  
+
+# %% [code]
+## Let's load and discover the dataset: (co2_emissions_tonnes_per_person.csv)
+co2_emissions_import= pd.read_csv('../input/gapminder-dataset/co2_emissions_tonnes_per_person.csv')
+co2_emissions = co2_emissions_import.copy()
+
+# %% [code]
+#get some info about our dataset
+co2_emissions.info()
+
+# %% [code]
+# see how is dataset looks like 
+co2_emissions.head()
+
+# %% [code]
+#drop all columns with null values 
+co2_emissions.dropna(axis=1,how='all', inplace = True)
+co2_emissions.fillna(0, inplace = True)
+co2_emissions.head()
+
+# %% [code]
+# Get some statistics info
+co2_emissions.describe()
+
+# %% [code]
+# plot Co2 emissions mean
+co2_emissions.mean().plot( title= 'Co2 emissions mean')
+
+# %% [code]
+# plot Co2 emissions maximum
+co2_emissions.describe().max().plot( title= 'Co2 emissions maximum')
+
+# %% [code]
+# plot Co2 emissions minimum
+co2_emissions.describe().min().plot(title= 'Co2 emissions minimum')
+
+
+# %% [code]
+# We see upnormal sharp raise for the minimum  Co2 emissions in the year 2002 let's check in which country
+co2_emissions.loc[co2_emissions['2002'].idxmax(), 'country']
+
+# %% [code]
+# We see unnormal sharp raise for maximum Co2 emissions in the year 1950 let's check in which country
+co2_emissions.loc[co2_emissions['1950'].idxmax(), 'country']
+
+# %% [markdown]
+# ### Geopandas for  plotting dateset on the world map
+
+# %% [code]
+
+#insert world_data_map
+world_data = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
+#merg world_data with our dataframe
+co2_emissions_geo=world_data.merge(co2_emissions,left_on='name', right_on='country')
+co2_emissions_geo.head()
+
+
+# Geopplotting Co2 emissions in the year 1800 (first dataset year)
+fig, ax = plt.subplots(1, 1)
+co2_emissions_geo.plot(column='1800',ax=ax, legend=True ,  legend_kwds={'label': "co2 emissions in 1800"})
+fig.set_size_inches(15,5)
+
+# Geopplotting Co2 emissions in the year 1950 
+fig, ax = plt.subplots(1, 1)
+co2_emissions_geo.plot(column='1950',ax=ax, legend=True ,  legend_kwds={'label': "co2 emissions in 1950"})
+fig.set_size_inches(15,5)
+
+# Geopplotting Co2 emissions in the year 2000 
+fig, ax = plt.subplots(1, 1)
+co2_emissions_geo.plot(column='2000',ax=ax, legend=True ,  legend_kwds={'label': "co2 emissions in 2000"})
+fig.set_size_inches(15,5)
+
+# Geopplotting Co2 emissions in the year 2018 (last dataset year)
+fig, ax = plt.subplots(1, 1)
+co2_emissions_geo.plot(column='2018',ax=ax, legend=True ,  legend_kwds={'label': "co2 emissions in 2018"})
+fig.set_size_inches(15,5)
+
+# %% [code]
+
+
+
+
+# %% [code]
+
+
+# %% [markdown]
+# # Conclusion
+# 
+# 
+# 
+# ### CO2 emissions dataset:
+# this dataset had a lot of missing data.
+# 
+# Statistics and plots show:
+# - the means of CO2 emissions has a positive correlation along years which means CO2 emission increasing.
+# - the maximum values of CO2 emissions show a sharp raise up in the year 1950 in Europe' Luxembourg' which could reflect the event of WWII.
+# - the minimum values are sticking to zero until the year 2000 then raises the highest value of CO2 emissions in 2000 is in Qatar and lowest in Congo.
+# - the Geo plotting data shows increasing along time in the area of Russia, Middle East and some part in Asia which needs action.
+# 
+# 
+# %% [code]
+
+
+# %% [code]
